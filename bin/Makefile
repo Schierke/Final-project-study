@@ -24,21 +24,19 @@ TOBJECTS= $(patsubst $(TSRCDIR)/%, $(BUILDDIR)/%, $(TSOURCES:.$(SRCEXT)=.o))
 
 # definition of the binaries
 TARGET= main
-TTARGET= test_corrupt_image #test_corrupt_image
+TTARGET= 
 
 # definition of the directories for the include
-#CUDA_INCLUDE= $(CUDA)/include
-#ZED_INCLUDE= $(ZED)/include
+
 
 # definition of the directories for the libraries
-#CUDA_LIBS=-L $(CUDA)/lib64 -lcuda -lcudart
-#ZED_LIBS=-L $(ZED)/lib -l sl_calibration -l sl_depthcore -l sl_zed
+
 
 # compilation options
 CXXFLAGS= -g -W -Wall -std=c++11 -O3 -pthread 
 LDFLAGS=
-LIBS= $(CUDA_LIBS) $(ZED_LIBS) -lboost_system -lboost_filesystem
-INC= -I $(CUDA_INCLUDE) -I $(ZED_INCLUDE) -I $(SRCDIR)
+LIBS= -lboost_system -lboost_filesystem
+INC=  -I $(SRCDIR)
 
 # for OpenCV compilation
 CFLAGS+= `pkg-config --cflags opencv` #openCV include flags
@@ -57,10 +55,10 @@ $(BUILDDIR)/%.o : %.cpp
 	@echo $<
 	@$(CXX) $(CXXFLAGS) $(INC) -c -o $@ $<
 
-#main: $(OBJECTS) $(BUILDDIR)/main.o
-#	@echo " Linking..."
-#	@echo " $(CXX) $^ -o $(TARGET) $(LIBS)"
-#	$(CXX) $^ -o $(TARGET) $(LIBS)
+main: $(OBJECTS) $(BUILDDIR)/main.o
+	@echo " Linking..."
+	@echo " $(CXX) $^ -o $(TARGET) $(LIBS)"
+	$(CXX) $^ -o $(TARGET) $(LIBS)
 
 test_%: $(OBJECTS) $(BUILDDIR)/test_%.o
 	@echo Linking tests...

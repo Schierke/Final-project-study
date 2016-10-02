@@ -1,0 +1,12 @@
+#Ignore bin folder expect the Makefile
+bin/*
+!bin/Makefile
+
+# Ignore emacs backup files
+*~
+
+# Ignore indexation of the symbols and functions
+GPATH
+GRTAGS
+GSYMS
+GTAGS
