@@ -1,8 +1,11 @@
+// superpixel project's libraries
+#include "slic.hpp"
+
 // std library
 #include <string.h>
 #include <algorithm>
 #include <iostream>
-
+#include <chrono>
 // boost 
 #include <boost/program_options.hpp>
 #include <boost/numeric/interval.hpp>
@@ -38,31 +41,35 @@ int main(int argc, char **argv) {
     std::cerr << "Please provide the image" << std::endl;
     return -1;
   }
+  
   // Initialisation:
   cv::Mat image_input = cv::imread(argv[1], cv::IMREAD_COLOR);
   cv::Mat image_result;
   cv::Mat mask;
-  cv::Ptr<cv::ximgproc::SuperpixelSLIC> slic_image;
-  //
-
-  // Apply the superpixel to the image:
-  slic_image = cv::ximgproc::createSuperpixelSLIC(image_input, 101, 10, 10.0);
-  slic_image->iterate(10);
+  double tp1, tp2;
   
+  // save the start timer1:
+  tp1 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
+  // Intialize SuperpixelSLIC object
+  Superpixel sp_slic(101, 20, 10.0, 10);
+
+  // apply super pixel mask:
+  mask = sp_slic.extractSuperPixelMask(image_input);
+
+  // get the superpixel image:
+  image_result = sp_slic.applySuperPixel(image_input, mask);
+   
   // Number of superpixel:
-  int nb_superpixel = slic_image->getNumberOfSuperpixels();
-
-  std::cout << " Number of superpixels is : " << nb_superpixel << std::endl;
+  std::cout << " Number of superpixels is : " << sp_slic.getNumberOfSuperpixels()
+	    << std::endl;
   
-  image_input.copyTo(image_result);
+  tp2 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
-  // get the contours for displaying:
-  slic_image->getLabelContourMask(mask, true);
-
-  // Set mask to the result image:
-  image_result.setTo(cv::Scalar(0, 0, 255), mask);
-
-    // Show the result:
+  // Calculate execution time:
+  std::cout <<" Execution time : " << tp2-tp1 << " ms." << std::endl; 
+  
+  // Show the result:
   const cv::Size display_size = cv::Size(800,600);
   display_matrix("Original", image_input,
 		 display_size, true);
