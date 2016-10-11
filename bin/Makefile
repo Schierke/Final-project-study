@@ -35,7 +35,7 @@ TTARGET=
 # compilation options
 CXXFLAGS= -g -W -Wall -std=c++11 -O3 -pthread 
 LDFLAGS=
-LIBS= -lboost_system -lboost_filesystem
+LIBS= -lboost_system -lboost_filesystem -lboost_program_options
 INC=  -I $(SRCDIR)
 
 # for OpenCV compilation
