@@ -34,8 +34,8 @@ cv::Mat Superpixel::extractSuperPixelMask(const cv::Mat & image_input) {
 }
 
 cv::Mat Superpixel::applySuperPixel(cv::Mat  image_input,
-				     cv::Mat  image_mask
-				     ) const {
+				    cv::Mat  image_mask
+				    ) const {
   cv::Mat image_result;
   image_input.copyTo(image_result);
  // set mask :

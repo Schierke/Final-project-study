@@ -36,16 +36,20 @@ void display_matrix(const std::string window_name,
 }
  
 int main(int argc, char **argv) {
+
+  // Init for image option and video option:
+  std::string NO_IMAGE="";
+  std::string NO_VIDEO="";
   
   boost_opts::options_description desc("Allowed options");
   desc.add_options()
     ("help", "produce help message")
-    ("image", boost_opts::value<std::string>()->default_value("image-16.jpg"), " the image that needs analyze")
-    ("video", boost_opts::value<std::string>()->default_value("video.mp4"), " the video that needs analyze")
+    ("image", boost_opts::value<std::string>()->default_value(NO_IMAGE), " the image that needs analyze")
+    ("video", boost_opts::value<std::string>()->default_value(NO_VIDEO), " the video that needs analyze")
     ("algorithm", boost_opts::value<int>()->default_value(101), " the algorithm that is going to be used: 100 - SLIC, 101 - SLICO")
-    ("region_size", boost_opts::value<int>()->default_value(20), " size of the region of superpixel")
-    ("ruler", boost_opts::value<float>()->default_value(10.0), " compactness of the superpixel")
-    ("iteration", boost_opts::value<int>()->default_value(10), " the amount of iteration that superpixelSLIC algorithm needs to perform")
+    ("region_size", boost_opts::value<int>()->default_value(50), " size of the region of superpixel")
+    ("ruler", boost_opts::value<float>()->default_value(30), " compactness of the superpixel")
+    ("iteration", boost_opts::value<int>()->default_value(3), " the amount of iteration that superpixelSLIC algorithm needs to perform")
     ;
   
   boost_opts::variables_map variables_map;
@@ -58,40 +62,93 @@ int main(int argc, char **argv) {
   int region_size = variables_map["region_size"].as<int>();
   float ruler = variables_map["ruler"].as<float>();
   int iteration = variables_map["iteration"].as<int>();
-  
+
   // Initialisation:
+  cv::VideoCapture capture_video;
   cv::Mat image_input = cv::imread(image_filename, cv::IMREAD_COLOR);
   cv::Mat image_result;
+  cv::Mat image_hsv;
   cv::Mat mask;
   double tp1, tp2;
   
-  // save the start timer1:
-  tp1 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+  // If we choose the image to analyze:
+  if(image_filename != NO_IMAGE) {
 
-  // Intialize SuperpixelSLIC object
-  Superpixel sp_slic(algorithm, region_size, ruler, iteration);
-
-  // apply super pixel mask:
-  mask = sp_slic.extractSuperPixelMask(image_input);
-
-  // get the superpixel image:
-  image_result = sp_slic.applySuperPixel(image_input, mask);
+    // save the start timer1:
+    tp1 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    
+    // Convert the image to HSV:
+    cv::cvtColor(image_input, image_hsv, CV_RGB2HSV);
    
-  // Number of superpixel:
-  std::cout << " Number of superpixels is : " << sp_slic.getNumberOfSuperpixels()
-	    << std::endl;
-  
-  tp2 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    // Intialize SuperpixelSLIC object
+    Superpixel sp_slic(algorithm, region_size, ruler, iteration);
 
-  // Calculate execution time:
-  std::cout <<" Execution time : " << tp2-tp1 << " ms." << std::endl; 
+    // apply super pixel mask:
+    mask = sp_slic.extractSuperPixelMask(image_hsv);
+    
+    // get the superpixel image:
+    image_result = sp_slic.applySuperPixel(image_input, mask);
+   
+    // Number of superpixel:
+    std::cout << " Number of superpixels is : " << sp_slic.getNumberOfSuperpixels()
+	      << std::endl;
+    
+    tp2 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
+    // Calculate execution time:
+    std::cout <<" Execution time : " << tp2-tp1 << " ms." << std::endl; 
   
-  // Show the result:
-  const cv::Size display_size = cv::Size(800,600);
-  display_matrix("Original", image_input,
-		 display_size, true);
-  display_matrix("Result", image_result,
-		 display_size, true);
-  cv::waitKey(0);
+    // Show the result:
+    const cv::Size display_size = cv::Size(800,600);
+    display_matrix("Original", image_input,
+		   display_size, true);
+    display_matrix("Result", image_result,
+		   display_size, true);
+    cv::waitKey(0);
+  }
+  // If we choose the video to analyze:
+  else if(video_filename != NO_VIDEO) {
+    // Intialize SuperpixelSLIC object
+    Superpixel sp_slic(algorithm, region_size, ruler, iteration);
+    capture_video.open(video_filename);
+    cv::Mat frame;
+
+    while(1) {
+      // save the start timer1:
+      tp1 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+      if(!capture_video.read(frame)) {
+	break;
+      }
+      capture_video >> frame;
+      cv::resize(frame, frame, cv::Size(360, 240), 0, 0, cv::INTER_CUBIC);
+
+      cv::cvtColor(frame, image_hsv, CV_RGB2HSV);
+
+      // apply super pixel mask:
+      mask = sp_slic.extractSuperPixelMask(image_hsv);
+      // get the superpixel image:
+      image_result = sp_slic.applySuperPixel(frame, mask);
+   
+      // Number of superpixel:
+      std::cout << " Number of superpixels is : " << sp_slic.getNumberOfSuperpixels()
+		<< std::endl;
+      
+      tp2 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+      
+      // Calculate execution time:
+      std::cout <<" Execution time : " << tp2-tp1 << " ms." << std::endl; 
+  
+      // Show the result:
+      const cv::Size display_size = cv::Size(360,240);
+      //display_matrix("Original", frame,
+      //		     display_size, true);
+      display_matrix("Result", image_result,
+		     display_size, true);
+      cv::waitKey(20);
+    }
+  }
+  else {
+    std::cout<<" CAN'T GET ANY VIDEO OR IMAGE PROVIDED!!!" << std::endl;
+  }
   return 0;
 }
