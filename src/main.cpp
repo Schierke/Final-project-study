@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iostream>
 #include <chrono>
+#include <thread>
 // boost 
 #include <boost/program_options.hpp>
 #include <boost/numeric/interval.hpp>
@@ -33,6 +34,14 @@ void display_matrix(const std::string window_name,
   else {
     cv::imshow(window_name, window_matrix);
   }
+}
+
+
+void read_video(cv::VideoCapture capture_video,  cv::Mat & frame, cv::Mat &image_hsv) {
+  capture_video >> frame;
+  cv::resize(frame, frame, cv::Size(360, 240), 0, 0, cv::INTER_CUBIC);
+
+  cv::cvtColor(frame, image_hsv, CV_RGB2HSV);
 }
  
 int main(int argc, char **argv) {
@@ -113,17 +122,19 @@ int main(int argc, char **argv) {
     capture_video.open(video_filename);
     cv::Mat frame;
 
+    // Take the first frame to analyzing:
+    capture_video >> frame;
+    cv::resize(frame, frame, cv::Size(360, 240), 0, 0, cv::INTER_CUBIC);
+
+    cv::cvtColor(frame, image_hsv, CV_RGB2HSV);
     while(1) {
       // save the start timer1:
       tp1 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
       if(!capture_video.read(frame)) {
 	break;
       }
-      capture_video >> frame;
-      cv::resize(frame, frame, cv::Size(360, 240), 0, 0, cv::INTER_CUBIC);
-
-      cv::cvtColor(frame, image_hsv, CV_RGB2HSV);
-
+      
+      std::thread video_thread(read_video, capture_video, std::ref(frame), std::ref(image_hsv));
       // apply super pixel mask:
       mask = sp_slic.extractSuperPixelMask(image_hsv);
       // get the superpixel image:
@@ -132,12 +143,13 @@ int main(int argc, char **argv) {
       // Number of superpixel:
       std::cout << " Number of superpixels is : " << sp_slic.getNumberOfSuperpixels()
 		<< std::endl;
-      
+      video_thread.join();
+
       tp2 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
       
       // Calculate execution time:
       std::cout <<" Execution time : " << tp2-tp1 << " ms." << std::endl; 
-  
+      
       // Show the result:
       const cv::Size display_size = cv::Size(360,240);
       //display_matrix("Original", frame,
