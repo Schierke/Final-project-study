@@ -1,8 +1,10 @@
 // superpixel project's libraries
 #include "slic.hpp"
+#include "seeds.hpp"
 
 // std library
 #include <string.h>
+//#include <stdeexcept>
 #include <algorithm>
 #include <iostream>
 #include <chrono>
@@ -43,7 +45,9 @@ void read_video(cv::VideoCapture capture_video,  cv::Mat & frame, cv::Mat &image
 
   cv::cvtColor(frame, image_hsv, CV_RGB2HSV);
 }
- 
+
+
+
 int main(int argc, char **argv) {
 
   // Init for image option and video option:
@@ -53,12 +57,13 @@ int main(int argc, char **argv) {
   boost_opts::options_description desc("Allowed options");
   desc.add_options()
     ("help", "produce help message")
+    ("superpixel_algo", boost_opts::value<int>()->default_value(0), " Choose the superpixel algorithm that will be using: 0 is SLIC while 1 is SEEDS")
     ("image", boost_opts::value<std::string>()->default_value(NO_IMAGE), " the image that needs analyze")
     ("video", boost_opts::value<std::string>()->default_value(NO_VIDEO), " the video that needs analyze")
-    ("algorithm", boost_opts::value<int>()->default_value(101), " the algorithm that is going to be used: 100 - SLIC, 101 - SLICO")
+    ("algorithm", boost_opts::value<int>()->default_value(100), " the algorithm that is going to be used: 100 - SLIC, 101 - SLICO")
     ("region_size", boost_opts::value<int>()->default_value(50), " size of the region of superpixel")
-    ("ruler", boost_opts::value<float>()->default_value(30), " compactness of the superpixel")
-    ("iteration", boost_opts::value<int>()->default_value(3), " the amount of iteration that superpixelSLIC algorithm needs to perform")
+    ("ruler", boost_opts::value<float>()->default_value(10), " compactness of the superpixel")
+    ("iteration", boost_opts::value<int>()->default_value(10), " the amount of iteration that superpixelSLIC algorithm needs to perform")
     ;
   
   boost_opts::variables_map variables_map;
@@ -75,6 +80,8 @@ int main(int argc, char **argv) {
   // Initialisation:
   cv::VideoCapture capture_video;
   cv::Mat image_input = cv::imread(image_filename, cv::IMREAD_COLOR);
+  cv::Size default_size = image_input.size();
+  cv::resize(image_input, image_input, cv::Size(400,400));
   cv::Mat image_result;
   cv::Mat image_hsv;
   cv::Mat mask;
@@ -87,7 +94,7 @@ int main(int argc, char **argv) {
     tp1 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     
     // Convert the image to HSV:
-    cv::cvtColor(image_input, image_hsv, CV_RGB2HSV);
+    cv::cvtColor(image_input, image_hsv, CV_RGB2Luv);
    
     // Intialize SuperpixelSLIC object
     Superpixel sp_slic(algorithm, region_size, ruler, iteration);
@@ -126,7 +133,7 @@ int main(int argc, char **argv) {
     capture_video >> frame;
     cv::resize(frame, frame, cv::Size(360, 240), 0, 0, cv::INTER_CUBIC);
 
-    cv::cvtColor(frame, image_hsv, CV_RGB2HSV);
+    cv::cvtColor(frame, image_hsv, CV_RGB2Luv);
     while(1) {
       // save the start timer1:
       tp1 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
