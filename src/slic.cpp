@@ -15,14 +15,12 @@ Superpixel::Superpixel(const int algorithm,
   iteration(iteration){};
 
 cv::Mat Superpixel::extractSuperPixelMask(const cv::Mat & image_input) {
-  // image input in HSV:
-  cv::Mat img_hsv;
+ 
   cv::Mat mask;
   
   // Convert the image input to HSV:
-  cv::cvtColor(image_input, img_hsv, CV_RGB2HSV);
 
-  slic_image = cv::ximgproc::createSuperpixelSLIC(img_hsv, algorithm, 
+  slic_image = cv::ximgproc::createSuperpixelSLIC(image_input, algorithm, 
 						  region_size, ruler);
   
   slic_image->iterate(10);
