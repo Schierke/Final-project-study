@@ -96,6 +96,7 @@ int main(int argc, char **argv) {
   cv::Size default_size = image_input.size();
   cv::resize(image_input, image_input, cv::Size(400,400));
   cv::Mat image_result;
+  cv::Mat image_result_2;
   cv::Mat image_hsv;
   cv::Mat mask;
   double tp1, tp2;
@@ -119,7 +120,10 @@ int main(int argc, char **argv) {
       mask = sp_slic.extractSuperPixelMask(image_hsv);
     
       // get the superpixel image:
-      image_result = sp_slic.applySuperPixel(image_input, mask);
+       image_result = sp_slic.applySuperPixel(image_input, mask);
+
+      // get the superpixel region image:
+      image_result_2 = sp_slic.applyPixelRegion(mask);
    
       // Number of superpixel:
       std::cout << " Number of superpixels is : " << sp_slic.getNumberOfSuperpixels()
@@ -135,6 +139,8 @@ int main(int argc, char **argv) {
       display_matrix("Original", image_input,
 		     display_size, true);
       display_matrix("Result", image_result,
+		     display_size, true);
+      display_matrix("Result_2", image_result_2,
 		     display_size, true);
       cv::waitKey(0);
     }

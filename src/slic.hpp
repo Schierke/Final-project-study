@@ -27,7 +27,11 @@ public:
   cv::Mat applySuperPixel( cv::Mat  image_input,
 			   cv::Mat  image_mask
 			   ) const ;
+  cv::Mat applyPixelRegion(cv::Mat image_mask) const;
   int getNumberOfSuperpixels();
+  bool if_white(cv::Mat image,
+		int indicateur_i,
+		int indicateur_j) const;
 
 private:
   cv::Ptr<cv::ximgproc::SuperpixelSLIC> slic_image;
