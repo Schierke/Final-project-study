@@ -62,7 +62,8 @@ int main(int argc, char **argv) {
     ("video", boost_opts::value<std::string>()->default_value(NO_VIDEO), " the video that needs analyze")
     ("algorithm", boost_opts::value<int>()->default_value(100), " the algorithm that is going to be used: 100 - SLIC, 101 - SLICO")
     ("region_size", boost_opts::value<int>()->default_value(50), " size of the region of superpixel")
-    ("ruler", boost_opts::value<float>()->default_value(10), " compactness of the superpixel")
+    ("ruler", boost_opts::value<int>()->default_value(10), " compactness of the superpixel")
+    ("min_element_size", boost_opts::value<int>()->default_value(10), " the minimum value to enforce connectivity")
     ("iteration", boost_opts::value<int>()->default_value(10), " the amount of iteration that superpixelSLIC algorithm needs to perform")
     ("num_superpixels", boost_opts::value<int>()->default_value(400), " the number of superpixel using SEEDS")
     ("num_levels", boost_opts::value<int>()->default_value(4), " number of levels using SEEDS")
@@ -82,7 +83,8 @@ int main(int argc, char **argv) {
   int superpixel_algo = variables_map["superpixel_algo"].as<int>();
   int algorithm = variables_map["algorithm"].as<int>();
   int region_size = variables_map["region_size"].as<int>();
-  float ruler = variables_map["ruler"].as<float>();
+  int ruler = variables_map["ruler"].as<int>();
+  int min_element_size = variables_map["min_element_size"].as<int>();
   int iteration = variables_map["iteration"].as<int>();
   int num_superpixels = variables_map["num_superpixels"].as<int>();
   int num_levels = variables_map["num_levels"].as<int>();
@@ -114,7 +116,7 @@ int main(int argc, char **argv) {
       cv::cvtColor(image_input, image_hsv, CV_RGB2Luv);
    
       // Intialize SuperpixelSLIC object
-      Superpixel sp_slic(algorithm, region_size, ruler, iteration);
+      Superpixel sp_slic(algorithm, region_size, ruler, iteration, min_element_size);
     
       // apply super pixel mask:
       mask = sp_slic.extractSuperPixelMask(image_hsv);
@@ -144,10 +146,22 @@ int main(int argc, char **argv) {
 		     display_size, true);
       cv::waitKey(0);
     }
+
+
     // If we choose the video to analyze:
     else if(video_filename != NO_VIDEO) {
+      static const char * window_name = "SLIC Superpixels";
+      // create a window for trackbar:
+      cv::namedWindow(window_name, 0 );
+      cv::createTrackbar("Algorithm", window_name, &algorithm, 1, 0);
+      cv::createTrackbar("Region size", window_name, &region_size, 200, 0);
+      cv::createTrackbar("Ruler", window_name, &ruler, 100, 0);
+      cv::createTrackbar("Connectivity", window_name, &min_element_size, 100, 0);
+      cv::createTrackbar("Iterations", window_name, &iteration, 12, 0);
+
+      
       // Intialize SuperpixelSLIC object
-      Superpixel sp_slic(algorithm, region_size, ruler, iteration);
+      Superpixel sp_slic(algorithm, region_size, ruler, iteration, min_element_size);
       capture_video.open(video_filename);
       cv::Mat frame;
       

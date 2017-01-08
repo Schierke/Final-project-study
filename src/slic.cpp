@@ -12,12 +12,14 @@
 
 Superpixel::Superpixel(const int algorithm,
 		       const int region_size,
-		       const float ruler,
-		       const int iteration):
+		       const int ruler,
+		       const int iteration,
+		       const int min_element_size):
   algorithm(algorithm),
   region_size(region_size),
   ruler(ruler),
-  iteration(iteration){};
+  iteration(iteration),
+  min_element_size(min_element_size){};
 
 cv::Mat Superpixel::extractSuperPixelMask(const cv::Mat & image_input) {
  
@@ -30,7 +32,7 @@ cv::Mat Superpixel::extractSuperPixelMask(const cv::Mat & image_input) {
   
   slic_image->iterate(10);
   
-  slic_image->enforceLabelConnectivity(10);
+  slic_image->enforceLabelConnectivity(min_element_size);
 
   
   // return the mask contour:
@@ -70,7 +72,6 @@ cv::Mat Superpixel::applyPixelRegion(cv::Mat image_mask) const {
   /*
   // inverse the color in mask:
   cv::bitwise_not(image_mask, inverse_mask);
-  cv::imshow("keke", inverse_mask);
   // extract the contours:
   std::vector<std::vector<cv::Point>> contours;
   cv::findContours(inverse_mask, contours,
@@ -88,8 +89,8 @@ cv::Mat Superpixel::applyPixelRegion(cv::Mat image_mask) const {
      cv::drawContours(image_result, contours, i, color, 
 		      -1, 8, hierarchy, 0, cv::Point()); 
   }
-  
   */
+  
 
   // Test algorithm 2:
   
@@ -152,7 +153,7 @@ cv::Mat Superpixel::applyPixelRegion(cv::Mat image_mask) const {
       }
     }
   
-  image_result.setTo(cv::Scalar(0,0,0), image_mask);
+  image_result.setTo(cv::Scalar(0, 0, 0), image_mask);
   return image_result;
 
 }
