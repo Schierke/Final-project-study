@@ -90,37 +90,8 @@ cv::Mat Superpixel::applyPixelRegion(cv::Mat image_mask) const {
   }
   
   */
+
   // Test algorithm 2:
-  /*
-  for(int i = 0; i < image_result.rows; i++) 
-    for(int j = 0; j < image_result.cols; j++) {
-      if(if_white(image_mask,i-1,j) || i == 0) {
-	if(if_white(image_mask, i, j-1) || j==0) {
-	  // set new color for the pixel:
-	  int b = cv::theRNG().uniform(0, 255);
-	  int g = cv::theRNG().uniform(0, 255);
-	  int r = cv::theRNG().uniform(0, 255);
-	  
-	  cv::Vec3b &intensity = image_result.at<cv::Vec3b>(i, j);
-	  intensity.val[0] = b;
-	  intensity.val[1] = g;
-	  intensity.val[2] = r;
-	 
-	}
-	// set the color to the previous pixel:
-	else {
-	  cv::Vec3b color = image_result.at<cv::Vec3b>(i,j-1);
-	  image_result.at<cv::Vec3b>(i,j) = color;
-	}
-      }
-      // set the color to the previous pixel:
-      else {
-	cv::Vec3b color = image_result.at<cv::Vec3b>(i-1,j);
-	image_result.at<cv::Vec3b>(i,j) = color;
-      }
-    }
-  */
-  // Test algorithm 3:
   
   const int rows = image_result.rows;
   const int cols = image_result.cols;
