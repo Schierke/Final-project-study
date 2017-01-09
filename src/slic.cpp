@@ -15,7 +15,7 @@ Superpixel::Superpixel(const int algorithm,
 		       const int ruler,
 		       const int iteration,
 		       const int min_element_size):
-  algorithm(algorithm),
+  algorithm(algorithm+100),
   region_size(region_size),
   ruler(ruler),
   iteration(iteration),

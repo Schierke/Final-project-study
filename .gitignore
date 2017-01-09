@@ -2,6 +2,9 @@
 bin/*
 !bin/Makefile
 
+#Ignore the result folder:
+result/*
+
 # Ignore emacs backup files
 *~
 
