@@ -39,10 +39,9 @@ void display_matrix(const std::string window_name,
 }
 
 
-void read_video(cv::VideoCapture capture_video,  cv::Mat & frame, cv::Mat &image_hsv) {
+void read_video(cv::VideoCapture capture_video,  cv::Mat & frame) {
   capture_video >> frame;
 
-  cv::cvtColor(frame, image_hsv, CV_RGB2Luv);
 }
 
 
@@ -185,7 +184,11 @@ int main(int argc, char **argv) {
 	  break;
 	}
       
-	std::thread video_thread(read_video, capture_video, std::ref(frame), std::ref(image_hsv));
+	std::thread video_thread(read_video, capture_video, std::ref(frame));
+	
+	// Convert image to CIELAB color space:
+	cv::cvtColor(frame, image_hsv, CV_RGB2Luv);
+
 	// apply super pixel mask:
 	mask = sp_slic.extractSuperPixelMask(image_hsv);
 	// get the superpixel image:
@@ -228,7 +231,7 @@ int main(int argc, char **argv) {
 	  tp1 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     
 	  // Convert the image to hsv :
-	  cv::cvtColor(image_input, image_hsv, CV_RGB2Luv);
+	  cv::cvtColor(image_input, image_hsv, CV_RGB2HSV);
       
    
 	  // Intialize SuperpixelSLIC object
@@ -265,6 +268,83 @@ int main(int argc, char **argv) {
 	  display_matrix("Result", image_result,
 			 display_size, true);
 	  cv::waitKey(0);
+	}
+	else if(video_filename != NO_VIDEO) {
+    
+
+	  static const char * window_name = "SEEDS Superpixels";
+	  // create a window for trackbar:
+	  cv::namedWindow(window_name, 0 );
+	  cv::createTrackbar("Nb of Superpixels", window_name, &num_superpixels, 1000, 0);
+	  cv::createTrackbar("Number of levels", window_name, &num_levels, 10, 0);
+	  cv::createTrackbar("Smoothing Prior", window_name, &prior, 5, 0);
+	  cv::createTrackbar("Iterations", window_name, &iteration, 12, 0);
+      
+      
+	  // Intialize SuperpixelSLIC object
+	  capture_video.open(video_filename);
+      
+	  cv::Mat frame;
+      
+	  int iterator_frame = 0;
+
+	  // Take the first frame to analyzing:
+	  capture_video >> frame;
+      
+	  cv::cvtColor(frame, image_hsv, CV_RGB2HSV);
+	  while(1) {
+	    Seeds seeds(image_hsv.size().width,
+			image_hsv.size().height,
+			image_hsv.channels(),
+			num_superpixels,
+			num_levels,
+			prior,
+			num_histogram_bins,
+			double_step,
+			iteration);
+
+	    // save the start timer1:
+	    tp1 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	    if(!capture_video.read(frame)) {
+	      break;
+	    }
+      
+	    std::thread video_thread(read_video, capture_video, std::ref(frame));
+	    
+	    // Convert image to HSV:
+	    cv::cvtColor(frame, image_hsv, CV_RGB2HSV);
+	    
+	    // apply super pixel mask:
+	    mask = seeds.extractSuperPixelMask(image_hsv);
+	    // get the superpixel image:
+	    image_result = seeds.applySuperPixel(frame, mask);
+	    
+	    // Number of superpixel:
+	    std::cout << " Number of superpixels is : " << seeds.getNumberOfSuperpixels()
+		      << std::endl;
+	    video_thread.join();
+
+	    tp2 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	    
+	    // Calculate execution time:
+	    std::cout <<" Execution time : " << tp2-tp1 << " ms." << std::endl; 
+	    
+	    // save the video to the result folder:
+	    cv::imwrite("../result/" + std::to_string(iterator_frame)+ ".png",image_result);
+	    
+	    iterator_frame ++ ;
+	    // Show the result:
+	    const cv::Size display_size = cv::Size(600,400);
+	    //display_matrix("Original", frame,
+	    //		     display_size, true);
+	    display_matrix("Result", image_result,
+			   display_size, true);
+      
+	    cv::waitKey(20);
+	  }
+	}
+	else {
+	  std::cout << " CAN'T GET ANY VIDEO OR IMAGE PROVIDED!!!" << std::endl;
 	}
   }
   else std::cout <<" CHOOSE THE SUPERPIXEL ALGORITHM!! " << std::endl;
