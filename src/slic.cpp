@@ -101,6 +101,8 @@ cv::Mat Superpixel::applyPixelRegion(cv::Mat image_mask) const {
     for(int j = 0; j < cols; j++)
       is_checked[i][j] = false;
   
+  int array_1[4] = {1, -1, 0, 0};
+  int array_2[4] = {0, 0, -1, 1};
 
   for(int i = 0; i < rows; i++) 
     for(int j =0; j < cols; j++) {
@@ -118,6 +120,7 @@ cv::Mat Superpixel::applyPixelRegion(cv::Mat image_mask) const {
 	//image_result.at<cv::Vec3b>(i,j)  = intensity;
 	std::queue<std::pair<int,int>> pts_region;
 	pts_region.push(std::make_pair (i,j));
+	
 	while(!pts_region.empty()) {
 	  std::pair<int, int> temp;
 	  temp = pts_region.front();
@@ -125,30 +128,18 @@ cv::Mat Superpixel::applyPixelRegion(cv::Mat image_mask) const {
 	  is_checked[temp.first][temp.second] = true;
 	  image_result.at<cv::Vec3b>(temp.first, temp.second) = intensity;
 	  
-	  if(temp.first - 1 >=0 )
-	  if(!if_white(image_mask, temp.first - 1, temp.second)
-	     && !is_checked[temp.first - 1][temp.second]) {
-	    is_checked[temp.first-1][temp.second] = true;
-	    pts_region.push(std::make_pair (temp.first - 1, temp.second));
-	  }
-	  if(temp.first + 1 < rows)
-	  if(!if_white(image_mask, temp.first + 1, temp.second)
-	     && !is_checked[temp.first + 1][temp.second]) {
-	    is_checked[temp.first+1][temp.second] = true;
-	    pts_region.push(std::make_pair (temp.first + 1, temp.second));
-	  }
-	  if(temp.second + 1 < cols)
-	  if(!if_white(image_mask, temp.first, temp.second + 1)
-	     && !is_checked[temp.first][temp.second + 1]) {
-	    is_checked[temp.first][temp.second+1] = true;
-	    pts_region.push(std::make_pair (temp.first , temp.second + 1));
-	  }
-	  if(temp.second - 1 >=0)
-	  if(!if_white(image_mask, temp.first , temp.second-1)
-	     && !is_checked[temp.first ][temp.second-1]) {
-	    is_checked[temp.first][temp.second-1] = true;
-	    pts_region.push(std::make_pair (temp.first, temp.second - 1));
-	  }
+	  for(int k = 0; k < 4; k++) {
+	    if(temp.first + array_1[k] < rows && temp.first +  array_1[k]  >=0 &&
+	       temp.second + array_2[k] < cols && temp.second + array_2[k] >=0) {
+	      if(!if_white(image_mask, temp.first + array_1[k], 
+			   temp.second + array_2[k])
+		 && !is_checked[temp.first + array_1[k]][temp.second + array_2[k]]) {
+		is_checked[temp.first+array_1[k]][temp.second+array_2[k]] = true;
+		pts_region.push(std::make_pair (temp.first + array_1[k], 
+						temp.second+ array_2[k]));
+	      }
+	    }
+	  }	  
 	}
       }
     }
