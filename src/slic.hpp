@@ -33,6 +33,7 @@ public:
   bool if_white(cv::Mat image,
 		int indicateur_i,
 		int indicateur_j) const;
+  cv::Mat getLabels();
 
 private:
   cv::Ptr<cv::ximgproc::SuperpixelSLIC> slic_image;

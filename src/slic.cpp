@@ -37,8 +37,67 @@ cv::Mat Superpixel::extractSuperPixelMask(const cv::Mat & image_input) {
   
   // return the mask contour:
   slic_image->getLabelContourMask(mask, true);
-  
+  //slic_image->getLabels(mask);
   return mask;
+}
+
+cv::Mat Superpixel::getLabels() {
+  cv::Mat mask;
+  
+  // apply getLabels method:
+  slic_image->getLabels(mask);
+  
+  cv::Mat image_result(mask.rows, mask.cols, CV_8UC3);
+  
+  const int rows = image_result.rows;
+  const int cols = image_result.cols;
+  bool is_checked[rows][cols];
+  for(int i = 0; i < rows; i++)
+    for(int j = 0; j < cols; j++)
+      is_checked[i][j] = false;
+  
+  int array_1[4] = {1, -1, 0, 0};
+  int array_2[4] = {0, 0, -1, 1};
+
+  for(int i = 0 ; i < image_result.rows; i++) 
+    for(int j = 0; j < image_result.cols; j++) {
+      if(!is_checked[i][j]) {
+	// set new color for the pixel:
+	int b = cv::theRNG().uniform(0, 255);
+	int g = cv::theRNG().uniform(0, 255);
+	int r = cv::theRNG().uniform(0, 255);
+	cv::Vec3b intensity = image_result.at<cv::Vec3b>(i, j);
+	intensity.val[0] = b;
+	intensity.val[1] = g;
+	intensity.val[2] = r;
+	std::queue<std::pair<int,int>> pts_region;
+	pts_region.push(std::make_pair(i,j));
+	
+	int region_number = mask.at<int>(i,j);
+	while(!pts_region.empty()) {
+	  std::pair<int, int> temp;
+	  temp = pts_region.front();
+	  pts_region.pop();
+	  is_checked[temp.first][temp.second] = true;
+	  image_result.at<cv::Vec3b>(temp.first, temp.second) = intensity;
+	  
+	  for(int k = 0; k < 4; k++) {
+	    if(temp.first + array_1[k] < rows && temp.first +  array_1[k]  >=0 &&
+	       temp.second + array_2[k] < cols && temp.second + array_2[k] >=0) {
+	      if(region_number == mask.at<int>(temp.first + array_1[k],
+						    temp.second + array_2[k])
+		 && !is_checked[temp.first + array_1[k]][temp.second + array_2[k]]) {
+		is_checked[temp.first+array_1[k]][temp.second+array_2[k]] = true;
+		pts_region.push(std::make_pair (temp.first + array_1[k], 
+						temp.second+ array_2[k]));
+	      }
+	    }
+	  }
+	}
+      }
+    }
+  
+  return image_result;
 }
 
 cv::Mat Superpixel::applySuperPixel(cv::Mat  image_input,
@@ -61,7 +120,7 @@ cv::Mat Superpixel::applyPixelRegion(cv::Mat image_mask) const {
 						cv::Point(-1,-1));
 
   // cv::morphologyEx(image_mask, image_mask, cv::MORPH_CLOSE, element50);
-  cv::dilate(image_mask, image_mask, element50);
+    cv::dilate(image_mask, image_mask, element50);
   // copy mask to the image result
   image_mask.copyTo(image_result);
   // convert image result to 3-channel BGR Mat: 
@@ -92,7 +151,7 @@ cv::Mat Superpixel::applyPixelRegion(cv::Mat image_mask) const {
   */
   
 
-  // Test algorithm 2:
+  // Test algorithm 2:/
   
   const int rows = image_result.rows;
   const int cols = image_result.cols;
@@ -117,7 +176,7 @@ cv::Mat Superpixel::applyPixelRegion(cv::Mat image_mask) const {
 	intensity.val[0] = b;
 	intensity.val[1] = g;
 	intensity.val[2] = r;
-	//image_result.at<cv::Vec3b>(i,j)  = intensity;
+	image_result.at<cv::Vec3b>(i,j)  = intensity;
 	std::queue<std::pair<int,int>> pts_region;
 	pts_region.push(std::make_pair (i,j));
 	
@@ -144,7 +203,7 @@ cv::Mat Superpixel::applyPixelRegion(cv::Mat image_mask) const {
       }
     }
   
-  image_result.setTo(cv::Scalar(0, 0, 0), image_mask);
+  //  image_result.setTo(cv::Scalar(0, 0, 0), image_mask);
   return image_result;
 
 }
