@@ -38,7 +38,8 @@ Log::~Log() {
 
 void Log::receiveSLIC(int nb_image,
 		      int algorithm, int region_size, int ruler,
-		      int min_element_size, int iteration) {
+		      int min_element_size, int iteration, 
+		      int execution_time) {
   superpixel_algo = 0;
   this->nb_image = nb_image;
   this->algorithm = algorithm +100;
@@ -46,20 +47,22 @@ void Log::receiveSLIC(int nb_image,
   this->ruler = ruler;
   this->min_element_size = min_element_size;
   this->iteration = iteration;
-  
+  this->execution_time = execution_time;
   };
 
 void Log::receiveSEEDS(int nb_image,
 		       int num_superpixels,
 		       int num_levels,
 		       int prior,
-		       int iteration) {
+		       int iteration,
+		       int execution_time) {
   superpixel_algo = 1;
   this->nb_image = nb_image;
   this->num_superpixels = num_superpixels;
   this->num_levels = num_levels;
   this->prior = prior;
   this->iteration = iteration;
+  this->execution_time = execution_time;
   };
 
 void Log::write() {
@@ -71,6 +74,7 @@ void Log::write() {
     file << " Ruler : " << ruler << std::endl;
     file << " Connectivity :" << min_element_size << std::endl;
     file << " Iteration :" << iteration << std::endl;
+    file << " Execution time : " <<execution_time << std::endl;
     file << "===========================" << std::endl;
 
   }
@@ -80,6 +84,7 @@ void Log::write() {
     file << " Number of levels : " << num_levels << std::endl;
     file << " Prior : " << prior << std::endl;
     file << " Iteration :" << iteration << std::endl;
+    file << " Execution time :" << execution_time << std::endl;
     file << "===========================" << std::endl;
   }
 }

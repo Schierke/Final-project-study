@@ -19,12 +19,12 @@ private:
   int num_levels; // SEEDS
   int num_superpixels; // SEEDS
   int prior; // SEEDS
-
+  int execution_time;
 public:
   Log();
   ~Log();
   void write();
-  void receiveSLIC(int, int, int, int, int, int);
-  void receiveSEEDS(int, int, int, int, int);
+  void receiveSLIC(int, int, int, int, int, int, int);
+  void receiveSEEDS(int, int, int, int, int, int);
 };
 #endif

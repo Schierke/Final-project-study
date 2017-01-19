@@ -1,6 +1,7 @@
 // superpixel project's libraries
 #include "slic.hpp"
 #include "seeds.hpp"
+#include "log.hpp"
 
 // std library
 #include <string.h>
@@ -89,6 +90,9 @@ int main(int argc, char **argv) {
   int prior = variables_map["prior"].as<int>();
   int num_histogram_bins = variables_map["num_histogram_bins"].as<int>();
   bool double_step = variables_map["double_step"].as<bool>();
+
+  // Init log:
+  Log log;
   
   // Initialisation:
   cv::VideoCapture capture_video;
@@ -182,6 +186,7 @@ int main(int argc, char **argv) {
       
       cv::cvtColor(frame, image_hsv, CV_RGB2Luv);
       while(1) {
+	
 	Superpixel sp_slic(algorithm, region_size, ruler, iteration, min_element_size);
 
 	// save the start timer1:
@@ -189,7 +194,7 @@ int main(int argc, char **argv) {
 	if(!capture_video.read(frame)) {
 	  break;
 	}
-      
+	
 	std::thread video_thread(read_video, capture_video, std::ref(frame));
 	
 	// Convert image to CIELAB color space:
@@ -212,15 +217,17 @@ int main(int argc, char **argv) {
 
 	// save the video to the result folder:
 	cv::imwrite("../result/" + std::to_string(iterator_frame)+ ".png",image_result);
-	
+	log.receiveSLIC(iterator_frame, algorithm, region_size,
+			ruler, min_element_size, iteration, tp2-tp1);
 	iterator_frame ++ ;
+	log.write();
 	// Show the result:
 	const cv::Size display_size = cv::Size(600,400);
 	//display_matrix("Original", frame,
 	//		     display_size, true);
 	display_matrix("Result", image_result,
 		       display_size, true);
-      
+	
 	cv::waitKey(20);
       }
     }
@@ -337,8 +344,15 @@ int main(int argc, char **argv) {
 	    
 	    // save the video to the result folder:
 	    cv::imwrite("../result/" + std::to_string(iterator_frame)+ ".png",image_result);
+	    log.receiveSEEDS(iterator_frame,
+			     num_superpixels,
+			     num_levels,
+			     prior,
+			     iteration,
+			     tp2-tp1);
 	    
 	    iterator_frame ++ ;
+	    log.write();
 	    // Show the result:
 	    const cv::Size display_size = cv::Size(600,400);
 	    //display_matrix("Original", frame,
