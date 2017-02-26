@@ -1,4 +1,6 @@
 // superpixel project's libraries
+
+// Test(for window)
 #include "slic.hpp"
 #include "seeds.hpp"
 #include "log.hpp"
