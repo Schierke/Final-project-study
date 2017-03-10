@@ -51,7 +51,9 @@ cv::Mat Superpixel::getLabels() {
   
   const int rows = image_result.rows;
   const int cols = image_result.cols;
-  bool is_checked[rows][cols];
+  bool **is_checked = new bool*[rows];
+  for (int i = 0; i < rows; i++)
+	  is_checked[i] = new bool[cols];
   for(int i = 0; i < rows; i++)
     for(int j = 0; j < cols; j++)
       is_checked[i][j] = false;
@@ -155,7 +157,9 @@ cv::Mat Superpixel::applyPixelRegion(cv::Mat image_mask) const {
   
   const int rows = image_result.rows;
   const int cols = image_result.cols;
-  bool is_checked[rows][cols];
+  bool **is_checked = new bool*[rows];
+  for (int i = 0; i < rows; i++)
+	  is_checked[i] = new bool[cols];
   for(int i = 0; i < rows; i++)
     for(int j = 0; j < cols; j++)
       is_checked[i][j] = false;
